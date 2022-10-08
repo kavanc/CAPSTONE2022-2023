@@ -1,4 +1,4 @@
-0 Knife
-1 Not Knife
-2 Nate With Knife
-3 Nate without knife
+0 Knife 
+1 Not knife
+2 Knife in hand
+3 Empty hand
