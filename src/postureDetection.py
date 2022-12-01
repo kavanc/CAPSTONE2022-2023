@@ -8,6 +8,10 @@ def main():
     pose = mpPose.Pose()
     mpDraw = mp.solutions.drawing_utils
 
+    cap = cv2.VideoCapture('resources/capstone01.mp4')
+    # cap = cv2.VideoCapture('')
+    # cap = cv2.VideoCapture('')
+    
     cap = cv2.VideoCapture(0)
     cap.set(10, 150) # adjust brightness
 
