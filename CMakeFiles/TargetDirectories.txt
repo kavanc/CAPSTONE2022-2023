@@ -1,0 +1,3 @@
+/Users/kavanchandra/GitHub/CAPSTONE2022-2023/CMakeFiles/Capstone.dir
+/Users/kavanchandra/GitHub/CAPSTONE2022-2023/CMakeFiles/edit_cache.dir
+/Users/kavanchandra/GitHub/CAPSTONE2022-2023/CMakeFiles/rebuild_cache.dir
