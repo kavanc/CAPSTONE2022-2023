@@ -1,17 +1,18 @@
 import cv2
+from video import VideoGet
+from framerate import CountsPerSec
 # import numpy as np
 
 def main():
-    casc_path = "src/new_dataset/classifier/cascade.xml"
-    # casc_path = "haar/temp/classifier/cascade.xml"
-
+    casc_path = "new_dataset/classifier/cascade.xml"
+    vid_path = "../resources/capstone01.mp4"
     knife_cascade = cv2.CascadeClassifier(casc_path)
 
-    cap = cv2.VideoCapture(0)
-    cap.set(10, 100)
+    video_getter = VideoGet(vid_path).start()
+    cps = CountsPerSec().start()
 
     while True:
-        _, img = cap.read()
+        img = video_getter.frame
         img_gray = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
         knife = knife_cascade.detectMultiScale(img_gray, 1.01, 11, minSize=[90, 90], maxSize=[180, 180]) # goal size is between 125 and 200
 
@@ -26,11 +27,13 @@ def main():
         
         x, y, w, h = max_coords[0], max_coords[1], max_coords[2], max_coords[3]
         cv2.rectangle(img, (x, y), (x + w, y + h), (255, 0, 0),  2)
-        # cv2.rectangle(img_gray, (x, y), (x + w, y + h), (255, 0, 0),  2)
 
+        print("Frame rate: ", cps.countsPerSec())
         cv2.imshow("Result", img)
-        # cv2.imshow("Result gray", img_gray)
-        if cv2.waitKey(1) & 0xFF == ord('q'):
+        cps.increment()
+
+        if (cv2.waitKey(1) & 0xFF == ord('q')) or video_getter.stopped:
+            video_getter.stop()
             break
 
 def detect_knife(img):

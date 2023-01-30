@@ -8,12 +8,12 @@ def main():
     pose = mpPose.Pose()
     mpDraw = mp.solutions.drawing_utils
 
-    cap = cv2.VideoCapture('C:/Users/natep/Documents/GitHub/CAPSTONE2022-2023/resources/capstone06.mp4')
+    cap = cv2.VideoCapture('C:/Users/natep/Documents/GitHub/CAPSTONE2022-2023/resources/capstone11.mp4')
     # cap = cv2.VideoCapture('')
     # cap = cv2.VideoCapture('')
     
     # cap = cv2.VideoCapture(0)
-    cap.set(10, 150) # adjust brightness
+    # cap.set(10, 100) # adjust brightness
 
     pTime = 0
     counter = 0
