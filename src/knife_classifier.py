@@ -3,7 +3,6 @@ import os
 from datetime import datetime
 
 # installed libraries
-import chime
 import cv2
 
 # custom classes
@@ -40,7 +39,7 @@ def save_image(frame):
 
 def main():
     # thread and cascade setup
-    casc_path = "new_dataset/classifier/cascade.xml"
+    casc_path = "knife_data/classifier/cascade.xml"
     vid_path = "../resources/capstone01.mp4"
     knife_cascade = cv2.CascadeClassifier(casc_path)
 
@@ -73,7 +72,7 @@ def main():
             if confidence > LOW_CER:
                 draw_rectangle(max_coords, img, confidence)
             if confidence >= HIGH_CER:
-                occ_frame = cps.get_occurence()
+                occ_frame = cps.get_occurrence()
 
                 # saves an image with a half second separation between saves
                 if (occ_frame - prev_img) >= 15:
@@ -83,13 +82,12 @@ def main():
                 # sounds an alert no more than once per second
                 if (occ_frame - prev_alert) >= 30:
                     print("knife found")
-                    chime.success()
                     prev_alert = occ_frame
         except:
             pass
 
         # display result
-        # print("Frame rate: ", cps.countsPerSec())
+        print("Frame rate: ", cps.get_framerate())
         cv2.imshow("Result", img)
         cps.increment()
 

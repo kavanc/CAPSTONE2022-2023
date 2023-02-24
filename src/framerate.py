@@ -12,9 +12,9 @@ class CountsPerSec:
     def increment(self):
         self._num_occurrences += 1
 
-    def countsPerSec(self):
+    def get_framerate(self):
         elapsed_time = (datetime.now() - self._start_time).total_seconds()
         return self._num_occurrences / elapsed_time
 
-    def get_occurence(self):
+    def get_occurrence(self):
         return self._num_occurrences
