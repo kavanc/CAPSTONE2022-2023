@@ -1,4 +1,5 @@
 import cv2
+import mediapipe as mp
 
 # classes
 from framerate import CountsPerSec
@@ -41,10 +42,20 @@ def main():
     knife_counters = [0, 0, 0]
     # gun_counters = [0, 0, 0]
 
+    # pose crap
+    mp_pose = mp.solutions.pose
+    pose = mp_pose.Pose()
+    mp_draw = mp.solutions.drawing_utils
+
     while True:
         # read in frame and convert to grayscale
         img = video_getter.frame
         img_gray = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
+
+        # pose crap
+        # should probably add image preprocessing to video frame class
+        img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+        pose_result = pose.process(img_rgb)
 
         # compute weapon location
         knife_coords, knife_confidence_list = knife_classifier.classify(img_gray)
@@ -61,8 +72,17 @@ def main():
 
         # handle gun classification
         # if gun_coords_index > -1:
-            # gun_confidence = gun_confidence_list[gun_coords_index]
-            # gun_counters[0], gun_counters[1], gun_counters[2] = handle_positive_class(gun_confidence, max_gun_coords, img, cps, gun_counters, "Gun")
+        #     gun_confidence = gun_confidence_list[gun_coords_index]
+        #     gun_counters[0], gun_counters[1], gun_counters[2] = handle_alerts(gun_confidence, max_gun_coords, img, cps, gun_counters, "Gun")
+
+        # pose crap
+        if pose_result.pose_landmarks:
+            mp_draw.draw_landmarks(img, pose_result.pose_landmarks, mp_pose.POSE_CONNECTIONS)
+            for id, lm in enumerate(pose_result.pose_landmarks.landmark):
+                h, w, c = img.shape
+                cx, cy = int(lm.x * w) , int(lm.y * h)
+                cv2.circle(img, (cx, cy), 5, (255, 0, 0), cv2.FILLED)
+
 
         # join classifier threads
         knife_classifier.join()
