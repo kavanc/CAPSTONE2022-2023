@@ -34,10 +34,6 @@ def main():
     # video thread, src defaults to webcam, delay defaults to 33ms
     video_getter = VideoGet(src=vid_path).start()
 
-    # create new classifier threads
-    knife_classifier = Classifier(knife_casc_path, num=1).start()
-    # gun_classifier = Classifier(img_gray, knife_casc_path, num=2).start()
-
     # used to determine if a new image should be saved or alert should be sent
     knife_counters = [0, 0, 0]
     # gun_counters = [0, 0, 0]
@@ -57,9 +53,16 @@ def main():
         img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
         pose_result = pose.process(img_rgb)
 
-        # compute weapon location
-        knife_coords, knife_confidence_list = knife_classifier.classify(img_gray)
-        # gun_coords, gun_confidence_list = gun_classifier.classify()
+        # begin classifier threads
+        knife_classifier = Classifier(knife_casc_path, img_gray, num=1).start()
+        # gun_classifier = Classifier(gun_casc_path, img_gray, num=2).start()
+
+        # join classifier threads
+        knife_classifier.join()
+        # gun_classifier.join()
+
+        knife_coords, knife_confidence_list = knife_classifier.get_classify_results()
+        # gun_coords, gun_confidence_list = gun_classifier.get_classify_results()
 
         # determine index and coordinates of largest positive value
         max_knife_coords, knife_coords_index = calc_max_coords(knife_coords)
@@ -82,11 +85,6 @@ def main():
                 h, w, c = img.shape
                 cx, cy = int(lm.x * w) , int(lm.y * h)
                 cv2.circle(img, (cx, cy), 5, (255, 0, 0), cv2.FILLED)
-
-
-        # join classifier threads
-        knife_classifier.join()
-        # gun_classifier.join()
 
         # display frame rate
         print("Frame rate: ", cps.get_framerate())
