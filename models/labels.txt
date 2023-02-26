@@ -1,4 +1,0 @@
-0 Knife 
-1 Not knife
-2 Knife in hand
-3 Empty hand
