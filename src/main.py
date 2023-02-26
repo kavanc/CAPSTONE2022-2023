@@ -81,7 +81,7 @@ def main():
         # pose crap
         if pose_result.pose_landmarks:
             mp_draw.draw_landmarks(img, pose_result.pose_landmarks, mp_pose.POSE_CONNECTIONS)
-            for id, lm in enumerate(pose_result.pose_landmarks.landmark):
+            for lm in pose_result.pose_landmarks.landmark:
                 h, w, c = img.shape
                 cx, cy = int(lm.x * w) , int(lm.y * h)
                 cv2.circle(img, (cx, cy), 5, (255, 0, 0), cv2.FILLED)
