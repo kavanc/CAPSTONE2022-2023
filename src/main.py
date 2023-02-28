@@ -28,6 +28,8 @@ def main():
     # gun_casc_path = "gun_data/classifier/cascade.xml"
     vid_path = "../resources/capstone01.mp4"
 
+    knife_casc = cv2.CascadeClassifier(knife_casc_path)
+
     # framerate counter
     cps = CountsPerSec().start()
 
@@ -54,7 +56,7 @@ def main():
         pose_result = pose.process(img_rgb)
 
         # begin classifier threads
-        knife_classifier = Classifier(knife_casc_path, img_gray, num=1).start()
+        knife_classifier = Classifier(knife_casc, img_gray, num=1).start()
         # gun_classifier = Classifier(gun_casc_path, img_gray, num=2).start()
 
         # join classifier threads

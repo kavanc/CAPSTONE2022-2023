@@ -3,8 +3,8 @@ from threading import Thread
 
 # A class for creating weapon classifier threads.
 class Classifier:
-    def __init__(self, casc_path, frame, num=1, logging=False):
-        self.cascade = cv2.CascadeClassifier(casc_path)
+    def __init__(self, cascade, frame, num=1, logging=False):
+        self.cascade = cascade
         self.frame = frame
         self.num = num
         self.logging = logging
