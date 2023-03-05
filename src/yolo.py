@@ -1,6 +1,7 @@
 import cv2
 from ultralytics import YOLO
 from model_thread import MThread
+from framerate import CountsPerSec
 
 FONT = cv2.FONT_HERSHEY_SIMPLEX
 
@@ -20,6 +21,9 @@ def draw_header(img, name, x1, y1, x2):
     y = y1 - 30
     # cv2.rectangle(img, (x1, y), (x2, y1), (0, 0, 255), 2)
     cv2.putText(img, name, (x1, y1 - 10), FONT, 0.9, (0, 0, 255), 2)
+
+def draw_framerate(img, fps):
+    cv2.putText(img, str(fps), (10, 25), FONT, 0.8, (0, 255, 0), 2)
 
 '''
 
@@ -53,6 +57,7 @@ def test():
         cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 0, 255), 2)
         draw_header(frame, "Knife", x1, y1, x2)
 
+    draw_framerate(frame)
     cv2.imshow("Result", frame)
     cv2.waitKey()
 
@@ -64,6 +69,8 @@ def thread_test():
     gun_model = YOLO(gun_model_path)
 
     cap = cv2.VideoCapture(0)
+
+    cps = CountsPerSec().start()
 
     while True:
         ret, img = cap.read()
@@ -112,7 +119,9 @@ def thread_test():
         except:
             pass
 
+        draw_framerate(img, cps.get_framerate())
         cv2.imshow("Result", img)
+        cps.increment()
 
         if (cv2.waitKey(1) & 0xFF == ord('q')):
             break
@@ -126,6 +135,8 @@ def main():
     model = YOLO(gun_model)
 
     cap = cv2.VideoCapture(0)
+
+    cps = CountsPerSec().start()
 
     while True:
         ret, img = cap.read()
@@ -151,7 +162,9 @@ def main():
         except:
             pass
 
+        draw_framerate(img, cps.get_framerate())
         cv2.imshow("Result", img)
+        cps.increment()
 
         if (cv2.waitKey(1) & 0xFF == ord('q')):
             break
@@ -159,5 +172,5 @@ def main():
 
 if __name__ == '__main__':
     # main()
-    # test()
-    thread_test()
+    test()
+    # thread_test()
