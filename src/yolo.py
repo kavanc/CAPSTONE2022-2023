@@ -1,6 +1,8 @@
 import cv2
 from ultralytics import YOLO
 
+FONT = cv2.FONT_HERSHEY_SIMPLEX
+
 def get_frame(f_num):
     vid_path = "../resources/multi_knife.mp4"
     cap = cv2.VideoCapture(vid_path)
@@ -12,6 +14,11 @@ def get_frame(f_num):
             continue
         cap.release()
         return frame
+
+def draw_header(img, name, x1, y1, x2):
+    y = y1 - 30
+    # cv2.rectangle(img, (x1, y), (x2, y1), (0, 0, 255), 2)
+    cv2.putText(img, name, (x1, y1 - 10), FONT, 0.9, (0, 0, 255), 2)
 
 '''
 
@@ -36,8 +43,9 @@ def test():
         bb_list.append([int(x) for x in boxes[i]])
 
     for b in bb_list:
-        x, y, x2, y2 = b[0], b[1], b[2], b[3]
-        cv2.rectangle(frame, (x, y), (x2, y2), (0, 0, 255), 2)
+        x1, y1, x2, y2 = b[0], b[1], b[2], b[3]
+        cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 0, 255), 2)
+        draw_header(frame, "Knife", x1, y1, x2)
 
     cv2.imshow("Result", frame)
     cv2.waitKey()
@@ -65,8 +73,9 @@ def main():
                     bb_list.append([int(x) for x in boxes[i]])
 
                 for b in bb_list:
-                    x, y, x2, y2 = b[0], b[1], b[2], b[3]
-                    cv2.rectangle(img, (x, y), (x2, y2), (0, 0, 255), 2)
+                    x1, y1, x2, y2 = b[0], b[1], b[2], b[3]
+                    cv2.rectangle(img, (x1, y1), (x2, y2), (0, 0, 255), 2)
+                    draw_header(img, "Knife", x1, y1, x2)
 
         except:
             pass
@@ -78,5 +87,5 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
-    # test()
+    # main()
+    test()
