@@ -1,11 +1,12 @@
 import cv2
 from ultralytics import YOLO
+from model_thread import MThread
 
 FONT = cv2.FONT_HERSHEY_SIMPLEX
 
-def get_frame(f_num):
-    vid_path = "../resources/multi_knife.mp4"
-    cap = cv2.VideoCapture(vid_path)
+def get_frame(f_num, path):
+    # vid_path = "../resources/multi_knife.mp4"
+    cap = cv2.VideoCapture(path)
     frame = None
 
     for i in range(0, 500):
@@ -28,11 +29,14 @@ frame 51
 def test():
     knife_model = "models/knifeDetector.pt"
     gun_model = "models/KavanGunbest.pt"
-    vid_path = "../resources/multi_knife.mp4"
-    model = YOLO(knife_model)
-    # model = YOLO(gun_model)
+    # vid_path = "../resources/multi_knife.mp4"
+    vid_path = "../resources/capstone01.mp4"
 
-    frame = get_frame(51)
+    # model = YOLO(knife_model)
+    model = YOLO(gun_model)
+
+    frame = get_frame(0, vid_path)
+    # frame = get_frame(51)
 
     res = model.predict(source=frame, show=False, conf=0.1)
 
@@ -52,9 +56,71 @@ def test():
     cv2.imshow("Result", frame)
     cv2.waitKey()
 
+def thread_test():
+    knife_model_path = "models/knifeDetector.pt"
+    gun_model_path = "models/KavanGunbest.pt"
+    
+    knife_model = YOLO(knife_model_path)
+    gun_model = YOLO(gun_model_path)
+
+    cap = cv2.VideoCapture(0)
+
+    while True:
+        ret, img = cap.read()
+
+        knife_thread = MThread(img, knife_model) 
+        gun_thread = MThread(img, gun_model)
+
+        knife_thread.join()
+        gun_thread.join()
+
+        knife_res = knife_thread.get_res()
+        gun_res = gun_thread.get_res()
+
+        # res = model.predict(source=img, show=False, conf=0.7)
+
+        try:
+            knife_boxes = []
+            gun_boxes = []
+
+            knife_bb = []
+            gun_bb = []
+            for r in knife_res:
+                knife_boxes = r.boxes.xyxy
+
+            for r in gun_res:
+                gun_boxes = r.boxes.xyxy
+
+            if len(knife_boxes):
+                for i in range(len(knife_boxes)):
+                    knife_bb.append([int(x) for x in knife_boxes[i]])
+
+                for b in knife_bb:
+                    x1, y1, x2, y2 = b[0], b[1], b[2], b[3]
+                    cv2.rectangle(img, (x1, y1), (x2, y2), (0, 0, 255), 2)
+                    draw_header(img, "Knife", x1, y1, x2)
+
+            if len(gun_boxes):
+                for i in range(len(gun_boxes)):
+                    gun_bb.append([int(x) for x in gun_boxes[i]])
+
+                for b in gun_bb:
+                    x1, y1, x2, y2 = b[0], b[1], b[2], b[3]
+                    cv2.rectangle(img, (x1, y1), (x2, y2), (0, 0, 255), 2)
+                    draw_header(img, "Gun", x1, y1, x2)
+
+        except:
+            pass
+
+        cv2.imshow("Result", img)
+
+        if (cv2.waitKey(1) & 0xFF == ord('q')):
+            break
+
+
 # COLE, THIS RUNS ON WEBCAM
 def main():
-    # knife_model = "models/knifeDetector.pt"
+    knife_model = "models/knifeDetector.pt"
     gun_model = "models/KavanGunbest.pt"
     # model = YOLO(knife_model)
     model = YOLO(gun_model)
@@ -91,5 +157,5 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
-    # test()
+    # main()
+    test()
