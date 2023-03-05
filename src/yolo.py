@@ -2,7 +2,7 @@ import cv2
 from ultralytics import YOLO
 
 def get_frame(f_num):
-    vid_path = "../resources/capstone01.mp4"
+    vid_path = "../resources/multi_knife.mp4"
     cap = cv2.VideoCapture(vid_path)
     frame = None
 
@@ -13,31 +13,31 @@ def get_frame(f_num):
         cap.release()
         return frame
 
+'''
+
+frame 51
+'''
+
 def test():
-    '''
-    Frame list:
-[117, 118, 119, 120, 121, 122, 123, 124, 125, 126, 127, 128, 129, 130, 131, 132, 133, 134, 135, 136, 137, 138, 139, 140, 141, 142, 143, 144, 145, 146, 147, 148, 149, 150, 151, 152, 153, 
-154, 155, 156, 157, 158, 159, 160, 161, 162, 163, 164, 165, 166, 167, 168, 169, 170, 171, 172, 173, 174, 175, 176, 177, 178, 179, 180, 181, 182, 183, 184, 185, 186, 187, 188, 189, 190, 191, 192, 193, 194, 195, 196, 197, 198, 199]
-    '''
     knife_model = "models/knifeDetector.pt"
-    vid_path = "../resources/capstone01.mp4"
+    vid_path = "../resources/multi_knife.mp4"
     model = YOLO(knife_model)
 
-    frame = get_frame(163)
+    frame = get_frame(51)
 
-    res = model.predict(source=frame, show=False, conf=0.5)
+    res = model.predict(source=frame, show=False, conf=0.1)
 
     boxes = []
+    bb_list = []
     for r in res:
-        boxes = r.boxes.xyxy[0]
+        boxes = r.boxes.xyxy
 
-    print(boxes)
+    for i in range(len(boxes)):
+        bb_list.append([int(x) for x in boxes[i]])
 
-    boxes = [int(x) for x in boxes]
-    print(boxes)
-
-    x, y, x2, y2 = int(boxes[0]), int(boxes[1]), int(boxes[2]), int(boxes[3])
-    cv2.rectangle(frame, (x, y), (x2, y2), (0, 0, 255), 2)
+    for b in bb_list:
+        x, y, x2, y2 = b[0], b[1], b[2], b[3]
+        cv2.rectangle(frame, (x, y), (x2, y2), (0, 0, 255), 2)
 
     cv2.imshow("Result", frame)
     cv2.waitKey()
@@ -56,24 +56,27 @@ def main():
 
         try:
             boxes = []
+            bb_list = []
             for r in res:
-                boxes = r.boxes.xyxy[0]
+                boxes = r.boxes.xyxy
 
             if len(boxes):
-                boxes = [int(x) for x in boxes]
+                for i in range(len(boxes)):
+                    bb_list.append([int(x) for x in boxes[i]])
 
-                x, y, x2, y2 = boxes[0], boxes[1], boxes[2], boxes[3]
-                cv2.rectangle(img, (x, y), (x2, y2), (0, 0, 255), 2)
-
-                cv2.imshow("Result", img)
+                for b in bb_list:
+                    x, y, x2, y2 = b[0], b[1], b[2], b[3]
+                    cv2.rectangle(img, (x, y), (x2, y2), (0, 0, 255), 2)
 
         except:
             pass
+
+        cv2.imshow("Result", img)
 
         if (cv2.waitKey(1) & 0xFF == ord('q')):
             break
 
 
 if __name__ == '__main__':
-    # main()
-    test()
+    main()
+    # test()
