@@ -1,6 +1,6 @@
 import cv2
-# import mediapipe as mp
-from cv2 import cuda
+import mediapipe as mp
+# from cv2 import cuda
 
 # classes
 from framerate import CountsPerSec
@@ -35,7 +35,7 @@ def main():
     cps = CountsPerSec().start()
 
     # video thread, src defaults to webcam, delay defaults to 33ms
-    video_getter = VideoGet(src=vid_path).start()
+    video_getter = VideoGet().start()
 
     # used to determine if a new image should be saved or alert should be sent
     knife_counters = [0, 0, 0]
@@ -53,7 +53,7 @@ def main():
 
         # pose crap
         # should probably add image preprocessing to video frame class
-        img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+        # img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
         # pose_result = pose.process(img_rgb)
 
         # begin classifier threads
