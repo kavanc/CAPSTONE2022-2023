@@ -27,8 +27,10 @@ frame 51
 
 def test():
     knife_model = "models/knifeDetector.pt"
+    gun_model = "models/KavanGunbest.pt"
     vid_path = "../resources/multi_knife.mp4"
     model = YOLO(knife_model)
+    # model = YOLO(gun_model)
 
     frame = get_frame(51)
 
@@ -52,15 +54,17 @@ def test():
 
 # COLE, THIS RUNS ON WEBCAM
 def main():
-    knife_model = "models/knifeDetector.pt"
-    model = YOLO(knife_model)
+    # knife_model = "models/knifeDetector.pt"
+    gun_model = "models/KavanGunbest.pt"
+    # model = YOLO(knife_model)
+    model = YOLO(gun_model)
 
     cap = cv2.VideoCapture(0)
 
     while True:
         ret, img = cap.read()
 
-        res = model.predict(source=img, show=False, conf=0.5)
+        res = model.predict(source=img, show=False, conf=0.7)
 
         try:
             boxes = []
@@ -87,5 +91,5 @@ def main():
 
 
 if __name__ == '__main__':
-    # main()
-    test()
+    main()
+    # test()
