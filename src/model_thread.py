@@ -7,6 +7,7 @@ class MThread:
         self.model = model
         self.thread = Thread(target=self.predict, args=())
         self.conf = conf
+        self.show = show
 
     def start(self):
         self.thread.start()

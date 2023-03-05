@@ -75,8 +75,8 @@ def thread_test():
     while True:
         ret, img = cap.read()
 
-        knife_thread = MThread(img, knife_model, 0.7) 
-        gun_thread = MThread(img, gun_model, 0.5)
+        knife_thread = MThread(img, knife_model, 0.7).start()
+        gun_thread = MThread(img, gun_model, 0.5).start()
 
         knife_thread.join()
         gun_thread.join()
