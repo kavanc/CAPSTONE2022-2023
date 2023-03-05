@@ -68,8 +68,8 @@ def thread_test():
     while True:
         ret, img = cap.read()
 
-        knife_thread = MThread(img, knife_model) 
-        gun_thread = MThread(img, gun_model)
+        knife_thread = MThread(img, knife_model, 0.7) 
+        gun_thread = MThread(img, gun_model, 0.5)
 
         knife_thread.join()
         gun_thread.join()
@@ -122,7 +122,7 @@ def thread_test():
 def main():
     knife_model = "models/knifeDetector.pt"
     gun_model = "models/KavanGunbest.pt"
-    # model = YOLO(knife_model)
+    model2 = YOLO(knife_model)
     model = YOLO(gun_model)
 
     cap = cv2.VideoCapture(0)
@@ -131,6 +131,7 @@ def main():
         ret, img = cap.read()
 
         res = model.predict(source=img, show=False, conf=0.7)
+        model2.predict(source=img, show=False, conf=0.7)
 
         try:
             boxes = []
@@ -158,4 +159,5 @@ def main():
 
 if __name__ == '__main__':
     # main()
-    test()
+    # test()
+    thread_test()
