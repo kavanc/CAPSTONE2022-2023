@@ -24,7 +24,7 @@ def draw_header(img, name, x1, y1, x2):
     cv2.putText(img, name, (x1, y1 - 10), FONT, 0.9, (0, 0, 255), 2)
 
 def draw_framerate(img, fps):
-    cv2.putText(img, str(fps), (10, 25), FONT, 0.8, (0, 255, 0), 2)
+    cv2.putText(img, str(int(fps)), (10, 25), FONT, 0.8, (0, 255, 0), 2)
 
 '''
 
