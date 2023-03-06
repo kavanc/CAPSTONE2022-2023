@@ -77,7 +77,9 @@ class App:
         self.mp_holistic = mp.solutions.holistic # Mediapipe Solutions
 
         self.blf = open("models/body_language.pkl", "rb")
-        self.pose_model = pickle.load(self.blf)
+        self.pose_model = None
+        with open("models/body_language.pkl", "rb") as f:
+            self.pose_model = pickle.load(f)
         self.holistic = self.mp_holistic.Holistic(min_detection_confidence=0.5, min_tracking_confidence=0.5)
 
         # models setup
@@ -143,15 +145,14 @@ class App:
         if ret:
             # weapon prediction
             k_res = self.w_model.predict(source=img, conf=0.5)
-            draw_framerate(img, self.cps.get_framerate())
 
             img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
             img.flags.writeable = False
 
             results = self.holistic.process(img)
 
-            img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
             img.flags.writeable = True
+            img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
 
             # 4. Pose Detections
             self.mp_drawing.draw_landmarks(img, results.pose_landmarks, self.mp_holistic.POSE_CONNECTIONS,
@@ -162,30 +163,16 @@ class App:
             try:
                 # Extract Pose landmarks
                 pose = results.pose_landmarks.landmark
-                pose_row = list(np.array([[landmark.x, landmark.y, landmark.z] for landmark in pose]).flatten())
+
+                pose_row = list(np.array([[landmark.x, landmark.y, landmark.z, landmark.visibility] for landmark in pose]).flatten())
 
                 row = pose_row
 
                 # make detections
                 X = pd.DataFrame([row])
+
                 body_language_class = self.pose_model.predict(X)[0]
-                body_language_prob = self.pose_proba.predict(X)[0]
-                print("HERE", body_language_class, body_language_prob)
-
-                # grab ear coords
-                coords = tuple(np.multiply(
-                                np.array(
-                                    (results.pose_landmarks.landmark[self.mp_holistic.PoseLandmark.LEFT_EAR].x, 
-                                    results.pose_landmarks.landmark[self.mp_holistic.PoseLandmark.LEFT_EAR].y))
-                            , [640,480]).astype(int))
-
-                cv2.rectangle(img, 
-                            (coords[0], coords[1]+5), 
-                            (coords[0]+len(body_language_class)*20, coords[1]-30), 
-                            (245, 117, 16), -1)
-
-                cv2.putText(img, body_language_class, coords, 
-                            cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2, cv2.LINE_AA)
+                body_language_prob = self.pose_model.predict_proba(X)[0]
 
                 # Get status box
                 cv2.rectangle(img, (0,0), (250, 60), (245, 117, 16), -1)
@@ -231,6 +218,7 @@ class App:
                         self.take_screenshot(box, img)
 
             # rendering logic
+            draw_framerate(img, self.cps.get_framerate())
             img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
             self.frame = ImageTk.PhotoImage(image=Image.fromarray(img))
             self.canvas.create_image(0, 0, image=self.frame, anchor=NW)
