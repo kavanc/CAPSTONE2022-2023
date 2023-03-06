@@ -10,13 +10,12 @@ from ultralytics.yolo.utils.plotting import Annotator
 
 # custom classes
 from framerate import CountsPerSec
-from image_utils import draw_framerate
+from image_utils import draw_framerate, save_image
 
 
 '''
     TODO: 
-    - improve weapon recognition logic
-    - add back in screen shotting
+    - clean up layout
 '''
 
 class App:
@@ -33,10 +32,20 @@ class App:
 
 
         # models setup
-        self.k_model = YOLO("models/knifeDetector.pt")
+        self.w_model = YOLO("models/knifeDetector.pt")
+        self.model_cb_state = True
 
         # buttons
         self.ss_button()
+
+        # checkboxes
+        # webcam checkbox
+        self.webcam_cb_state = False
+        self.webcam_checkbox()
+
+        # screenshot checkbox
+        self.sh_cb_state = True
+        self.sh_checkbox()
 
         self.window.mainloop()
 
@@ -46,9 +55,29 @@ class App:
         self.start_btn = Button(self.window, text='Start', height=2, width=10, command=self.handle_start_stop)
         self.start_btn.pack()
 
+    # checkboxes
+    # toggles webcam or video
+    def webcam_checkbox(self):
+        self.webcam_cb = Checkbutton(self.window, text="Webcam", variable=self.webcam_cb_state, onvalue=True, offvalue=False, command=self.toggle_webcam_cb)
+        self.webcam_cb.pack()
+
+    def toggle_webcam_cb(self):
+        if self.vid_stopped:
+            self.webcam_cb_state = not self.webcam_cb_state
+
+    def sh_checkbox(self):
+        self.sh_cb = Checkbutton(self.window, text="Screenshot", variable=self.sh_cb_state, onvalue=True, offvalue=False, command=self.toggle_sh_cb)
+        self.sh_cb.select()
+        self.sh_cb.pack()
+
+    def toggle_sh_cb(self):
+        self.sh_cb_state = not self.sh_cb_state
+
 
     # handles start, stop and restart of video
     def handle_start_stop(self):
+        self.last_sh = 0 # screenshot frame counter
+
         if self.vid_stopped:
             self.vid_stopped = False
             self.start_btn.config(text="Stop")
@@ -62,8 +91,10 @@ class App:
     # this behaves as the logic outside the while loop
     def on_start(self):
         # this should be changed to accept webcam instead
-        # self.cap = cv2.VideoCapture("../resources/capstone01.mp4")
-        self.cap = cv2.VideoCapture(0)
+        if self.webcam_cb_state:
+            self.cap = cv2.VideoCapture(0)
+        else:
+            self.cap = cv2.VideoCapture("../resources/capstone01.mp4")
 
         # framerate
         self.cps = CountsPerSec().start()
@@ -73,15 +104,20 @@ class App:
         if self.cap.isOpened():
             self.cap.release()
 
+    def take_screenshot(self, box, img):
+        current_frame = self.cps.get_occurrence()
+        if (current_frame - self.last_sh) > 20 and float(box.conf[0]) > 0.85:
+            self.last_sh = current_frame
+            save_image(img)
+
+
     def video_loop(self):
         ret, img = self.cap.read()
 
         # if video is being played
         if ret:
-
-            print(img.shape)
             # weapon prediction
-            k_res = self.k_model.predict(source=img, conf=0.5)
+            k_res = self.w_model.predict(source=img, conf=0.5)
             draw_framerate(img, self.cps.get_framerate())
 
             # results display logic
@@ -94,8 +130,12 @@ class App:
                     b = box.xyxy[0]
                     c = box.cls
 
-                    header = f"{self.k_model.names[int(c)]} {box.conf[0]:.2f}"
+                    header = f"{self.w_model.names[int(c)]} {box.conf[0]:.2f}"
                     annotator.box_label(b, header, (0, 0, 255))
+
+                    # takes a screenshot with minimum 20 frame (~1s) separation
+                    if self.sh_cb_state:
+                        self.take_screenshot(box, img)
 
             # rendering logic
             img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)

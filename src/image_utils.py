@@ -26,7 +26,7 @@ def save_image(frame):
         os.mkdir("positives")
     except:
         pass
-    path = f"./positives/knife_{dt}.jpg"
+    path = f"./positives/{dt}.jpg"
     cv2.imwrite(path, frame)
 
 def draw_framerate(img, fps):
