@@ -1,5 +1,5 @@
-import mediapipe as mp # Import mediapipe
-import cv2 # Import opencv
+import mediapipe as mp 
+import cv2 
 import pickle 
 import pandas as pd
 import numpy as np
@@ -25,9 +25,6 @@ with mp_holistic.Holistic(min_detection_confidence=0.5, min_tracking_confidence=
         
         # Make Detections
         results = holistic.process(image)
-        # print(results.face_landmarks)
-        
-        # face_landmarks, pose_landmarks, left_hand_landmarks, right_hand_landmarks
         
         # Recolor image back to BGR for rendering
         image.flags.writeable = True   
