@@ -3,6 +3,8 @@ import os
 from datetime import datetime
 from constants import HIGH_CER, MED_CER, LOW_CER
 
+FONT = cv2.FONT_HERSHEY_SIMPLEX
+
 # draws rectangle according to accuracy
 def draw_rectangle(coords, img, accuracy):
     if accuracy >= HIGH_CER:
@@ -26,3 +28,6 @@ def save_image(frame):
         pass
     path = f"./positives/knife_{dt}.jpg"
     cv2.imwrite(path, frame)
+
+def draw_framerate(img, fps):
+    cv2.putText(img, str(int(fps)), (10, 25), FONT, 0.8, (0, 255, 0), 2)
