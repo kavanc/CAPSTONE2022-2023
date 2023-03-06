@@ -168,7 +168,7 @@ def main_failed():
             break
 
 def main():
-    knife_model = "models/knifeDetector.pt"
+    knife_model = "models/gunDetector.pt"
     model = YOLO(knife_model)
     cap = cv2.VideoCapture(0)
     cps = CountsPerSec().start()
@@ -176,7 +176,7 @@ def main():
     while True:
         ret, img = cap.read()
 
-        res = model.predict(source=img, show=False, conf=0.1)
+        res = model.predict(source=img, show=False, conf=0.5)
 
         for r in res:
             annotator = Annotator(img)

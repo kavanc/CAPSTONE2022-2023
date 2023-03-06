@@ -62,7 +62,8 @@ class App:
     # this behaves as the logic outside the while loop
     def on_start(self):
         # this should be changed to accept webcam instead
-        self.cap = cv2.VideoCapture("../resources/capstone01.mp4")
+        # self.cap = cv2.VideoCapture("../resources/capstone01.mp4")
+        self.cap = cv2.VideoCapture(0)
 
         # framerate
         self.cps = CountsPerSec().start()
@@ -77,6 +78,8 @@ class App:
 
         # if video is being played
         if ret:
+
+            print(img.shape)
             # weapon prediction
             k_res = self.k_model.predict(source=img, conf=0.5)
             draw_framerate(img, self.cps.get_framerate())
