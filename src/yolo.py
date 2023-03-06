@@ -2,6 +2,7 @@ import cv2
 from ultralytics import YOLO
 from model_thread import MThread
 from framerate import CountsPerSec
+from ultralytics.yolo.utils.plotting import Annotator
 
 FONT = cv2.FONT_HERSHEY_SIMPLEX
 
@@ -33,32 +34,29 @@ frame 51
 def test():
     knife_model = "models/knifeDetector.pt"
     gun_model = "models/KavanGunbest.pt"
-    # vid_path = "../resources/multi_knife.mp4"
-    vid_path = "../resources/capstone01.mp4"
+    vid_path = "../resources/multi_knife.mp4"
+    # vid_path = "../resources/capstone01.mp4"
 
-    # model = YOLO(knife_model)
-    model = YOLO(gun_model)
+    model = YOLO(knife_model)
+    # model = YOLO(gun_model)
 
-    frame = get_frame(0, vid_path)
-    # frame = get_frame(51)
+    # frame = get_frame(167, vid_path)
+    frame = get_frame(51, vid_path)
 
     res = model.predict(source=frame, show=False, conf=0.1)
 
-    boxes = []
-    bb_list = []
     for r in res:
-        boxes = r.boxes.xyxy
+        annotator = Annotator(frame)
 
-    for i in range(len(boxes)):
-        bb_list.append([int(x) for x in boxes[i]])
+        boxes = r.boxes
+        for box in boxes:
+            b = box.xyxy[0]
+            c = box.cls
 
-    for b in bb_list:
-        x1, y1, x2, y2 = b[0], b[1], b[2], b[3]
-        cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 0, 255), 2)
-        draw_header(frame, "Knife", x1, y1, x2)
+            annotator.box_label(b, f"{model.names[int(c)]} {box.conf[0]:.2f}", (0, 0, 255))
 
-    draw_framerate(frame)
-    cv2.imshow("Result", frame)
+    img = annotator.result()
+    cv2.imshow('RES', img)
     cv2.waitKey()
 
 def thread_test():
@@ -128,7 +126,7 @@ def thread_test():
 
 
 # COLE, THIS RUNS ON WEBCAM
-def main():
+def main_failed():
     knife_model = "models/knifeDetector.pt"
     gun_model = "models/KavanGunbest.pt"
     model2 = YOLO(knife_model)
@@ -169,8 +167,35 @@ def main():
         if (cv2.waitKey(1) & 0xFF == ord('q')):
             break
 
+def main():
+    knife_model = "models/knifeDetector.pt"
+    model = YOLO(knife_model)
+    cap = cv2.VideoCapture(0)
+    cps = CountsPerSec().start()
+
+    while True:
+        ret, img = cap.read()
+
+        res = model.predict(source=img, show=False, conf=0.1)
+
+        for r in res:
+            annotator = Annotator(img)
+
+            boxes = r.boxes
+            for box in boxes:
+                b = box.xyxy[0]
+                c = box.cls
+
+                annotator.box_label(b, f"{model.names[int(c)]} {box.conf[0]:.2f}", (0, 0, 255))
+
+        img = annotator.result()
+        draw_framerate(img, cps.get_framerate())
+        cv2.imshow("Result", img)
+        cps.increment()
+
+        if (cv2.waitKey(1) & 0xFF == ord('q')):
+            break
+
 
 if __name__ == '__main__':
-    # main()
-    test()
-    # thread_test()
+    main()
