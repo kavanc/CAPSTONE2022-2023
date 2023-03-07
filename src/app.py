@@ -2,6 +2,7 @@
 import cv2
 import numpy as np
 from tkinter import *
+from tkinter import scrolledtext
 from PIL import Image, ImageTk
 from datetime import datetime
 import pandas as pd
@@ -51,7 +52,7 @@ class App:
         self.log_frame.grid(row=0, column=1)
         self.log_label = Label(self.log_frame, text="Logs", font=self.header_font)
         self.log_label.grid(row=0, column=0)
-        self.log_box = Text(self.log_frame, height=45, width=30, cursor=None)
+        self.log_box = scrolledtext.ScrolledText(self.log_frame, height=45, width=30, cursor=None)
         self.log_box.configure(state='disabled')
         self.log_box.grid(row=1, column=0)
 
@@ -66,10 +67,17 @@ class App:
         self.webcam_cb = Checkbutton(self.options_frame, text="Webcam", variable=self.webcam_cb_state, onvalue=True, offvalue=False, command=self.toggle_webcam_cb)
         self.webcam_cb.grid(row=1, column=0)
         # screenshot checkbox
-        self.sh_cb_state = True
-        self.sh_cb = Checkbutton(self.options_frame, text="Screenshot", variable=self.sh_cb_state, onvalue=True, offvalue=False, command=self.toggle_sh_cb)
-        self.sh_cb.select()
+        self.sh_cb_state = IntVar(value=1)
+        self.sh_cb = Checkbutton(self.options_frame, text="Screenshot", variable=self.sh_cb_state, onvalue=1, offvalue=0, command=self.toggle_sh_cb)
         self.sh_cb.grid(row=2, column=0)
+        # weapon detection checkbox
+        self.show_weapon = IntVar(value=1)
+        self.weapon_cb = Checkbutton(self.options_frame, text="Weapon Detection", variable=self.show_weapon, onvalue=1, offvalue=0, command=self.toggle_weapon)
+        self.weapon_cb.grid(row=3, column=0)
+        # pose_detection checkbox
+        self.show_pose = IntVar(value=1)
+        self.pose_cb = Checkbutton(self.options_frame, text="Pose Detection", variable=self.show_pose, onvalue=1, offvalue=0, command=self.toggle_pose)
+        self.pose_cb.grid(row=4, column=0)
 
 
         # media pipe setup
@@ -94,6 +102,11 @@ class App:
     def toggle_sh_cb(self):
         self.sh_cb_state = not self.sh_cb_state
 
+    def toggle_weapon(self):
+        self.show_weapon = not self.show_weapon
+
+    def toggle_pose(self):
+        self.show_pose = not self.show_pose
 
     # handles start, stop and restart of video
     def handle_start_stop(self):
@@ -131,12 +144,14 @@ class App:
         if (current_frame - self.last_sh) > 20 and float(box.conf[0]) > 0.85:
             self.last_sh = current_frame
             save_image(img)
+            return True
 
     # updates log box to display results
     def update_log_box(self, text):
         self.log_box.configure(state='normal')
         self.log_box.insert(END, f"{str(datetime.now())}\n{text}")
         self.log_box.configure(state='disabled')
+        self.log_box.see(END)
 
     def video_loop(self):
         ret, img = self.cap.read()
@@ -144,82 +159,83 @@ class App:
         # if video is being played
         if ret:
             # weapon prediction
-            k_res = self.w_model.predict(source=img, conf=0.5)
+            k_res = None
+            if self.show_weapon:
+                k_res = self.w_model.predict(source=img, conf=0.5)
 
-            img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-            img.flags.writeable = False
+            results = None
+            if self.show_pose:
+                results = self.holistic.process(img)
 
-            results = self.holistic.process(img)
+                # 4. Pose Detections
+                self.mp_drawing.draw_landmarks(img, results.pose_landmarks, self.mp_holistic.POSE_CONNECTIONS,
+                                            self.mp_drawing.DrawingSpec(color=(245, 117, 66), thickness=2, circle_radius=4),
+                                            self.mp_drawing.DrawingSpec(color=(245, 66, 230), thickness=2, circle_radius=2),
+                                            )
 
-            img.flags.writeable = True
-            img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
+                try:
+                    # Extract Pose landmarks
+                    pose = results.pose_landmarks.landmark
 
-            # 4. Pose Detections
-            self.mp_drawing.draw_landmarks(img, results.pose_landmarks, self.mp_holistic.POSE_CONNECTIONS,
-                                        self.mp_drawing.DrawingSpec(color=(245, 117, 66), thickness=2, circle_radius=4),
-                                        self.mp_drawing.DrawingSpec(color=(245, 66, 230), thickness=2, circle_radius=2),
-                                        )
+                    pose_row = list(np.array([[landmark.x, landmark.y, landmark.z, landmark.visibility] for landmark in pose]).flatten())
 
-            try:
-                # Extract Pose landmarks
-                pose = results.pose_landmarks.landmark
+                    row = pose_row
 
-                pose_row = list(np.array([[landmark.x, landmark.y, landmark.z, landmark.visibility] for landmark in pose]).flatten())
+                    # make detections
+                    X = pd.DataFrame([row])
 
-                row = pose_row
+                    body_language_class = self.pose_model.predict(X)[0]
+                    body_language_prob = self.pose_model.predict_proba(X)[0]
 
-                # make detections
-                X = pd.DataFrame([row])
+                    # Get status box
+                    cv2.rectangle(img, (0,0), (250, 60), (245, 117, 16), -1)
+                    
+                    # Display Class
+                    pose_class = body_language_class.split(' ')[0]
+                    cv2.putText(img, 'CLASS'
+                                , (95,20), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 1, cv2.LINE_AA)
+                    cv2.putText(img, pose_class
+                                , (90,48), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2, cv2.LINE_AA)
 
-                body_language_class = self.pose_model.predict(X)[0]
-                body_language_prob = self.pose_model.predict_proba(X)[0]
+                    if pose_class == 'Fighting':
+                        self.update_log_box("Aggressive behaviour detected.\n\n")
+                    
+                    # Display Probability
+                    cv2.putText(img, 'PROB'
+                                , (15,20), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 1, cv2.LINE_AA)
+                    cv2.putText(img, str(round(body_language_prob[np.argmax(body_language_prob)],2))
+                                , (10,48), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2, cv2.LINE_AA)
 
-                # Get status box
-                cv2.rectangle(img, (0,0), (250, 60), (245, 117, 16), -1)
-                
-                # Display Class
-                pose_class = body_language_class.split(' ')[0]
-                cv2.putText(img, 'CLASS'
-                            , (95,12), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 1, cv2.LINE_AA)
-                cv2.putText(img, pose_class
-                            , (90,40), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2, cv2.LINE_AA)
+                except:
+                    pass
 
-                if pose_class == 'Fighting':
-                    self.update_log_box("Aggressive behaviour detected!")
-                
-                # Display Probability
-                cv2.putText(img, 'PROB'
-                            , (15,12), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 1, cv2.LINE_AA)
-                cv2.putText(img, str(round(body_language_prob[np.argmax(body_language_prob)],2))
-                            , (10,40), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2, cv2.LINE_AA)
+            if self.show_weapon:
+                # results display logic
+                for r in k_res:
+                    annotator = Annotator(img)
 
-            except:
-                pass
+                    boxes = r.boxes
 
-            # results display logic
-            for r in k_res:
-                annotator = Annotator(img)
+                    for box in boxes:
+                        b = box.xyxy[0]
+                        c = box.cls
 
-                boxes = r.boxes
+                        confidence = box.conf[0]
+                        w_type = self.w_model.names[int(c)]
+                        header = f"{w_type} {confidence:.2f}"
+                        annotator.box_label(b, header, (0, 0, 255))
 
-                for box in boxes:
-                    b = box.xyxy[0]
-                    c = box.cls
+                        if confidence > 0.5 and confidence < 0.8:
+                            self.update_log_box(f"Potential {w_type} found.\n\n")
 
-                    confidence = box.conf[0]
-                    w_type = self.w_model.names[int(c)]
-                    header = f"{w_type} {confidence:.2f}"
-                    annotator.box_label(b, header, (0, 0, 255))
+                        if confidence > 0.8:
+                            self.update_log_box(f"Positive {w_type} found.\n\n")
 
-                    if confidence > 0.5 and confidence < 0.8:
-                        self.update_log_box(f"Potential {w_type} found.\n\n")
-
-                    if confidence > 0.8:
-                        self.update_log_box(f"Positive {w_type} found.\n\n")
-
-                    # takes a screenshot with minimum 20 frame (~1s) separation
-                    if self.sh_cb_state:
-                        self.take_screenshot(box, img)
+                        # takes a screenshot with minimum 20 frame (~1s) separation
+                        if self.sh_cb_state:
+                            is_saved = self.take_screenshot(box, img)
+                            if is_saved:
+                                self.update_log_box(f"Image Saved.\n\n")
 
             # rendering logic
             draw_framerate(img, self.cps.get_framerate())

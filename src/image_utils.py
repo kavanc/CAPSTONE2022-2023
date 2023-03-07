@@ -30,4 +30,4 @@ def save_image(frame):
     cv2.imwrite(path, frame)
 
 def draw_framerate(img, fps):
-    cv2.putText(img, str(int(fps)), (10, 25), FONT, 0.8, (0, 255, 0), 2)
+    cv2.putText(img, str(int(fps)), (img.shape[1] - 45, 25), FONT, 0.8, (0, 255, 0), 2)
