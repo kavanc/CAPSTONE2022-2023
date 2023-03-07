@@ -91,7 +91,7 @@ class App:
         self.holistic = self.mp_holistic.Holistic(min_detection_confidence=0.5, min_tracking_confidence=0.5)
 
         # models setup
-        self.w_model = YOLO("models/knifeDetector.pt")
+        self.w_model = YOLO("models/WeaponsBest.pt")
 
         self.window.mainloop()
 
@@ -159,9 +159,10 @@ class App:
         # if video is being played
         if ret:
             # weapon prediction
-            k_res = None
+            w_res = None
             if self.show_weapon:
-                k_res = self.w_model.predict(source=img, conf=0.5)
+                w_res = self.w_model.predict(source=img, conf=0.5)
+                print(w_res[0].names)
 
             results = None
             if self.show_pose:
@@ -211,7 +212,7 @@ class App:
 
             if self.show_weapon:
                 # results display logic
-                for r in k_res:
+                for r in w_res:
                     annotator = Annotator(img)
 
                     boxes = r.boxes
@@ -223,19 +224,25 @@ class App:
                         confidence = box.conf[0]
                         w_type = self.w_model.names[int(c)]
                         header = f"{w_type} {confidence:.2f}"
-                        annotator.box_label(b, header, (0, 0, 255))
+                        
+                        # filters model for unwanted classes
+                        if w_type in ['Gun', 'Knife', 'Pistol', 'handgun', 'rifle']:
+                            # convert all gun types to be Gun class
+                            if w_type != 'Knife':
+                                w_type = 'Gun'
+                            annotator.box_label(b, header, (0, 0, 255))
 
-                        if confidence > 0.5 and confidence < 0.8:
-                            self.update_log_box(f"Potential {w_type} found.\n\n")
+                            if confidence > 0.5 and confidence < 0.8:
+                                self.update_log_box(f"Potential {w_type} found.\n\n")
 
-                        if confidence > 0.8:
-                            self.update_log_box(f"Positive {w_type} found.\n\n")
+                            if confidence > 0.8:
+                                self.update_log_box(f"Positive {w_type} found.\n\n")
 
-                        # takes a screenshot with minimum 20 frame (~1s) separation
-                        if self.sh_cb_state:
-                            is_saved = self.take_screenshot(box, img)
-                            if is_saved:
-                                self.update_log_box(f"Image Saved.\n\n")
+                            # takes a screenshot with minimum 20 frame (~1s) separation
+                            if self.sh_cb_state:
+                                is_saved = self.take_screenshot(box, img)
+                                if is_saved:
+                                    self.update_log_box(f"Image Saved.\n\n")
 
             # rendering logic
             draw_framerate(img, self.cps.get_framerate())
