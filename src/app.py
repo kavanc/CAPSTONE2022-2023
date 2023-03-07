@@ -223,13 +223,15 @@ class App:
 
                         confidence = box.conf[0]
                         w_type = self.w_model.names[int(c)]
-                        header = f"{w_type} {confidence:.2f}"
                         
                         # filters model for unwanted classes
                         if w_type in ['Gun', 'Knife', 'Pistol', 'handgun', 'rifle']:
                             # convert all gun types to be Gun class
                             if w_type != 'Knife':
                                 w_type = 'Gun'
+                            
+                            header = f"{w_type} {confidence:.2f}"
+
                             annotator.box_label(b, header, (0, 0, 255))
 
                             if confidence > 0.5 and confidence < 0.8:

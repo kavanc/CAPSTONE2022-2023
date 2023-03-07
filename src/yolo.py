@@ -168,7 +168,7 @@ def main_failed():
             break
 
 def main():
-    knife_model = "models/gunDetector.pt"
+    knife_model = "models/WeaponsBest.pt"
     model = YOLO(knife_model)
     cap = cv2.VideoCapture(0)
     cps = CountsPerSec().start()
