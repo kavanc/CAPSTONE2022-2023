@@ -178,10 +178,14 @@ class App:
                 cv2.rectangle(img, (0,0), (250, 60), (245, 117, 16), -1)
                 
                 # Display Class
+                pose_class = body_language_class.split(' ')[0]
                 cv2.putText(img, 'CLASS'
                             , (95,12), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 1, cv2.LINE_AA)
-                cv2.putText(img, body_language_class.split(' ')[0]
+                cv2.putText(img, pose_class
                             , (90,40), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2, cv2.LINE_AA)
+
+                if pose_class == 'Fighting':
+                    self.update_log_box("Aggressive behaviour detected!")
                 
                 # Display Probability
                 cv2.putText(img, 'PROB'
