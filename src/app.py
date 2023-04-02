@@ -18,7 +18,10 @@ import pickle
 # custom classes
 from framerate import CountsPerSec
 from image_utils import draw_framerate, save_image
+import customtkinter
 
+customtkinter.set_appearance_mode("System")  # Modes: "System" (standard), "Dark", "Light"
+customtkinter.set_default_color_theme("blue")  # Themes: "blue" (standard), "green", "dark-blue"
 
 '''
     TODO: 
@@ -27,58 +30,95 @@ from image_utils import draw_framerate, save_image
     - add settings menu instead of checkboxes
 '''
 
-class App:
-    def __init__(self, window):
-        # some setup stuff
-        self.window = window
-        self.window.title("Suspicious Activity Detection")
+class App(customtkinter.CTk):
+    def __init__(self):
+        super().__init__()
+
+
+    # configure window
+        self.title("Suspicious Activity Detection")
+        self.geometry(f"{1500}x{725}")
         self.vid_stopped = True
 
-        self.header_font = "helvetica 12 bold"
+        # configure grid layout (4x4)
+        self.grid_columnconfigure(1, weight=1)
+        self.grid_columnconfigure((2, 3), weight=0)
+        self.grid_rowconfigure((0, 1, 2), weight=1)
 
-        # layout
-        # video frame
-        self.vid_frame = Frame(window)
-        self.vid_frame.grid(row=0, column=0)
-        # video dispay
-        self.canvas = Canvas(self.vid_frame, width=960, height=720)
-        self.canvas.grid(row=0, column=0)
-        # start stop button
-        self.start_btn = Button(self.vid_frame, text='Start', height=2, width=10, command=self.handle_start_stop)
-        self.start_btn.grid(row=1, column=0)
+        # create sidebar frame with widgets  OPTIONS COL
+        self.sidebar_frame = customtkinter.CTkFrame(self, width=140, corner_radius=0)
+        self.sidebar_frame.grid(row=0, column=0, rowspan=4, sticky="nsew")
+        self.sidebar_frame.grid_rowconfigure(5, weight=1)
+        self.logo_label = customtkinter.CTkLabel(self.sidebar_frame, text="Options", font=customtkinter.CTkFont(size=20, weight="bold"))
+        self.logo_label.grid(row=0, column=0, padx=20, pady=(20, 10))
 
-        # logging frame
-        self.log_frame = Frame(window)
-        self.log_frame.grid(row=0, column=1)
-        self.log_label = Label(self.log_frame, text="Logs", font=self.header_font)
-        self.log_label.grid(row=0, column=0)
-        self.log_box = scrolledtext.ScrolledText(self.log_frame, height=45, width=30, cursor=None)
-        self.log_box.configure(state='disabled')
-        self.log_box.grid(row=1, column=0)
 
-        # options frame
-        self.options_frame = Frame(window)
-        self.options_frame.grid(row=0, column=2)
-        # options header
-        self.options_label = Label(self.options_frame, text="Options", font=self.header_font)
-        self.options_label.grid(row=0, column=0)
+        # START BUTTON
+        self.startbtn = customtkinter.CTkButton(self.sidebar_frame, text="Start Monitor", command=self.handle_start_stop)
+        self.startbtn.grid(row=1, column=0, padx=20, pady=10)
+
+        
         # input checkbox
-        self.webcam_cb_state = False
-        self.webcam_cb = Checkbutton(self.options_frame, text="Webcam", variable=self.webcam_cb_state, onvalue=True, offvalue=False, command=self.toggle_webcam_cb)
-        self.webcam_cb.grid(row=1, column=0)
+        self.webcam_cb_state = IntVar(value=0)
+        self.webcam_cb = customtkinter.CTkCheckBox(self.sidebar_frame, text="Webcam", variable=self.webcam_cb_state, onvalue=1, command=self.toggle_webcam_cb)
+        self.webcam_cb.grid(row=2, column=0, pady=(20, 0), padx=20, sticky="n")
+        self.webcam_cb.select()
+
+
         # screenshot checkbox
         self.sh_cb_state = IntVar(value=1)
-        self.sh_cb = Checkbutton(self.options_frame, text="Screenshot", variable=self.sh_cb_state, onvalue=1, offvalue=0, command=self.toggle_sh_cb)
-        self.sh_cb.grid(row=2, column=0)
+        self.sh_cb = customtkinter.CTkCheckBox(self.sidebar_frame, text="Screenshot", variable=self.sh_cb_state, onvalue=1, offvalue=0, command=self.toggle_sh_cb)
+        self.sh_cb.grid(row=3, column=0, pady=(20, 0), padx=20, sticky="n")
+        self.sh_cb.select()
+
+
         # weapon detection checkbox
         self.show_weapon = IntVar(value=1)
-        self.weapon_cb = Checkbutton(self.options_frame, text="Weapon Detection", variable=self.show_weapon, onvalue=1, offvalue=0, command=self.toggle_weapon)
-        self.weapon_cb.grid(row=3, column=0)
+        self.weapon_cb = customtkinter.CTkCheckBox(self.sidebar_frame, text="Weapon Detection", variable=self.show_weapon, onvalue=1, offvalue=0, command=self.toggle_weapon)
+        self.weapon_cb.grid(row=4, column=0, pady=(20, 0), padx=20, sticky="n")
+        self.weapon_cb.select()
+
+
         # pose_detection checkbox
         self.show_pose = IntVar(value=1)
-        self.pose_cb = Checkbutton(self.options_frame, text="Pose Detection", variable=self.show_pose, onvalue=1, offvalue=0, command=self.toggle_pose)
-        self.pose_cb.grid(row=4, column=0)
+        self.pose_cb = customtkinter.CTkCheckBox(self.sidebar_frame, text="Pose Detection", variable=self.show_pose, onvalue=1, command=self.toggle_pose)
+        self.pose_cb.grid(row=5, column=0, pady=(20, 0), padx=20, sticky="n")
+        self.pose_cb.select()
+        
+       
+        # LIGHT AND DARK MODE ETC
+        self.appearance_mode_label = customtkinter.CTkLabel(self.sidebar_frame, text="Appearance Mode:", anchor="w")
+        self.appearance_mode_label.grid(row=6, column=0, padx=20, pady=(10, 0))
+        self.appearance_mode_optionemenu = customtkinter.CTkOptionMenu(self.sidebar_frame, values=["Light", "Dark", "System"],
+                                                                       command=self.change_appearance_mode_event)
+        self.appearance_mode_optionemenu.grid(row=6, column=0, padx=20, pady=(10, 10))
 
+
+    # Widgets
+
+        # OUTPUT VIDEO
+        self.vid_frame = customtkinter.CTkFrame(self, corner_radius=10, width=800)
+        self.vid_frame.grid(row=0, column=1, padx=(20, 20), pady=(20, 20))
+
+        self.vid_label = customtkinter.CTkLabel(self.vid_frame, text="Livefeed", font=customtkinter.CTkFont(size=20, weight="bold"))
+        self.vid_label.grid(row=0, column=1, columnspan=1, padx=10, pady=10)
+
+        self.cam = customtkinter.CTkLabel(self.vid_frame, corner_radius=10, width=800, height=608, text="")
+        self.cam.grid(row=1, column=1, sticky="nsew")
+
+        # Output log
+        self.log_frame = customtkinter.CTkFrame(self, corner_radius=10)
+        self.log_frame.grid(row=0, column=2, padx=(20, 20), pady=(20, 20))
+
+        self.log_label = customtkinter.CTkLabel(self.log_frame, text="Output Log", font=customtkinter.CTkFont(size=20, weight="bold"))
+        self.log_label.grid(row=0, column=1, columnspan=1, padx=10, pady=10, sticky="")
+       
+        self.log_box = customtkinter.CTkTextbox(self.log_frame, width=400, height=400, cursor=None, yscrollcommand=True, corner_radius=10)
+        self.log_box.grid(row=2, column=1, padx=(10, 10), pady=(10, 10), sticky="nsew")
+
+        # set default values
+        self.appearance_mode_optionemenu.set("Dark")
+        
 
         # media pipe setup
         self.mp_drawing = mp.solutions.drawing_utils # drawing helpers
@@ -93,7 +133,10 @@ class App:
         # models setup
         self.w_model = YOLO("models/WeaponsBest.pt")
 
-        self.window.mainloop()
+        # self.window.mainloop()
+
+    def change_appearance_mode_event(self, new_appearance_mode: str):
+        customtkinter.set_appearance_mode(new_appearance_mode)
 
     def toggle_webcam_cb(self):
         if self.vid_stopped:
@@ -114,11 +157,11 @@ class App:
 
         if self.vid_stopped:
             self.vid_stopped = False
-            self.start_btn.config(text="Stop")
+            self.startbtn.configure(text="Stop")
             self.on_start()
             self.video_loop()
         else:
-            self.start_btn.config(text="Start")
+            self.startbtn.configure(text="Start")
             self.vid_stopped = True
             self.on_stop()
 
@@ -250,17 +293,24 @@ class App:
             draw_framerate(img, self.cps.get_framerate())
             img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
             self.frame = ImageTk.PhotoImage(image=Image.fromarray(img))
-            self.canvas.create_image(0, 0, image=self.frame, anchor=NW)
-            self.window.after(1, self.video_loop)
+
+            # Format into tkinter image and add to GUI
+            self.cam.imgtk = self.frame
+            self.cam.configure(image=self.cam.imgtk)
+            self.after(1, self.video_loop)
 
             # fps incrementer
             self.cps.increment()
 
         # if video has ended or been stopped
         else:
-            black_img = np.zeros((720, 960, 3), dtype=np.uint8)
+            black_img = np.zeros((608, 800, 3), dtype=np.uint8)
             self.frame = ImageTk.PhotoImage(image=Image.fromarray(black_img))
-            self.canvas.create_image(0, 0, image=self.frame, anchor=NW)
+            self.cam.imgtk = self.frame
+            self.cam.configure(image=self.cam.imgtk)
+
 
 if __name__ == '__main__':
-    App(Tk())
+    # App(Tk())
+    app = App()
+    app.mainloop()
