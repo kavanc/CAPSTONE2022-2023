@@ -18,9 +18,6 @@ from create_csv import get_image_list
 
 # potential models to be trained and evaluated
 PIPELINES = {
-    'gb': make_pipeline(StandardScaler(), GradientBoostingClassifier()),
-    'rc': make_pipeline(StandardScaler(), RidgeClassifier()),
-    'lr': make_pipeline(StandardScaler(), LogisticRegression()),
     'rf': make_pipeline(StandardScaler(), RandomForestClassifier()),
 }
 
@@ -34,8 +31,8 @@ def generate_models(X_train, y_train) -> dict:
 
     return models
 
-def write_model(model, type):
-    with open(f"./models/{type}.pkl", "wb") as f:
+def write_model(model):
+    with open(f"./models/body_language.pkl", "wb") as f:
         pickle.dump(model,f)
 
 
@@ -76,6 +73,5 @@ if __name__ == '__main__':
 
     # writes the models to pickle files for later use
     print("Writing Models to pickle files")
-    for key in models:
-        write_model(models[key], key)
+    write_model(models['rf'])
 
