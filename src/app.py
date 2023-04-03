@@ -265,9 +265,11 @@ class App(customtkinter.CTk):
 
                     boxes = r.boxes
 
-                    if len(boxes) and pose_class != "Fighting" and self.show_pose:
+                    if len(boxes) and self.show_pose:
                         self.display_aggressive(img, "Aggressive")
                     elif not len(boxes) and self.show_pose:
+                        self.display_aggressive(img, pose_class)
+                    elif self.show_pose:
                         self.display_aggressive(img, pose_class)
 
                     for box in boxes:
