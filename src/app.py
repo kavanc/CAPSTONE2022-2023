@@ -221,9 +221,8 @@ class App(customtkinter.CTk):
                     # Extract Pose landmarks
                     pose = results.pose_landmarks.landmark
 
-                    pose_row = list(np.array([[landmark.x, landmark.y, landmark.z, landmark.visibility] for landmark in pose]).flatten())
+                    row = list(np.array([[landmark.x, landmark.y, landmark.z, landmark.visibility] for landmark in pose]).flatten())
 
-                    row = pose_row
 
                     # make detections
                     X = pd.DataFrame([row])
@@ -280,7 +279,7 @@ class App(customtkinter.CTk):
                             if confidence > 0.5 and confidence < 0.8:
                                 self.update_log_box(f"Potential {w_type} found.\n\n")
 
-                            if confidence > 0.8:
+                            if confidence >= 0.8:
                                 self.update_log_box(f"Positive {w_type} found.\n\n")
 
                             # takes a screenshot with minimum 20 frame (~1s) separation
@@ -311,6 +310,5 @@ class App(customtkinter.CTk):
 
 
 if __name__ == '__main__':
-    # App(Tk())
     app = App()
     app.mainloop()
