@@ -33,6 +33,13 @@ def create_csv(out_path: str = './', img_list: list[str] = None):
         for img_path in img_list:
 
             img_class = img_path.split('\\')[-1].split('_')[0].lower() # works on windows only
+
+            if img_class == "average":
+                img_class = "Normal"
+
+            if img_class == "fighting":
+                img_class = "Fighting"
+
             image = cv2.imread(img_path)
             image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 

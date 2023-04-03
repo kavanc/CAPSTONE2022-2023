@@ -8,7 +8,7 @@ import time
 import os
 
 if __name__ == '__main__':
-    title = "Fighting"
+    title = "Normal"
     
     # media pipe setup
     mp_drawing = mp.solutions.drawing_utils

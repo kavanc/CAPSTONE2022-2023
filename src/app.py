@@ -196,6 +196,10 @@ class App(customtkinter.CTk):
         self.log_box.configure(state='disabled')
         self.log_box.see(END)
 
+    def display_aggressive(slef, img, pose_class):
+        cv2.putText(img, pose_class
+                    , (90,48), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2, cv2.LINE_AA)
+
     def video_loop(self):
         ret, img = self.cap.read()
 
@@ -206,6 +210,8 @@ class App(customtkinter.CTk):
             if self.show_weapon:
                 w_res = self.w_model.predict(source=img, conf=0.5)
                 print(w_res[0].names)
+
+            pose_class = None
 
             results = None
             if self.show_pose:
@@ -237,8 +243,8 @@ class App(customtkinter.CTk):
                     pose_class = body_language_class.split(' ')[0]
                     cv2.putText(img, 'CLASS'
                                 , (95,20), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 1, cv2.LINE_AA)
-                    cv2.putText(img, pose_class
-                                , (90,48), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2, cv2.LINE_AA)
+                    # cv2.putText(img, pose_class
+                    #             , (90,48), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2, cv2.LINE_AA)
 
                     if pose_class == 'Fighting':
                         self.update_log_box("Aggressive behaviour detected.\n\n")
@@ -258,6 +264,11 @@ class App(customtkinter.CTk):
                     annotator = Annotator(img)
 
                     boxes = r.boxes
+
+                    if len(boxes) and pose_class != "Fighting" and self.show_pose:
+                        self.display_aggressive(img, "Aggressive")
+                    elif not len(boxes) and self.show_pose:
+                        self.display_aggressive(img, pose_class)
 
                     for box in boxes:
                         b = box.xyxy[0]
