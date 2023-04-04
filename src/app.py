@@ -243,8 +243,10 @@ class App(customtkinter.CTk):
                     pose_class = body_language_class.split(' ')[0]
                     cv2.putText(img, 'CLASS'
                                 , (95,20), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 1, cv2.LINE_AA)
-                    # cv2.putText(img, pose_class
-                    #             , (90,48), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2, cv2.LINE_AA)
+                    
+                    if not self.show_weapon:
+                        cv2.putText(img, pose_class
+                                    , (90,48), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2, cv2.LINE_AA)
 
                     if pose_class == 'Fighting':
                         self.update_log_box("Aggressive behaviour detected.\n\n")
